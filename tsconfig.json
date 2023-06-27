@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "target": "ESNEXT",
+        "module": "ES6",
+        "skipLibCheck": true,
+        "noEmit": true,
+        "forceConsistentCasingInFileNames": true,
+    }
+}
