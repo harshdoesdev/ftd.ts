@@ -73,7 +73,8 @@ const shouldEndComponent = (node, endingBlock) => {
 
 const parser = (code) => {
   const lines = code.split(/\n/);
-  let node = new FTDRootNode();
+  const rootNode = new FTDRootNode();
+  let node = rootNode;
   const len = lines.length;
   let i = 0;
   while (i < len) {
@@ -86,6 +87,12 @@ const parser = (code) => {
         }
         if (shouldEndComponent(node, param)) {
           node = node.parent;
+        } else {
+          throw new Error(
+            `FTD Parsing Error: ${node.component} is a container node and should be closed.
+
+You are missing '-- end: ${node.component}'`
+          );
         }
       } else {
         if (!node.isContainerNode && !node.isRootNode) {
@@ -115,6 +122,9 @@ const parser = (code) => {
       }
     }
     i++;
+  }
+  if (node !== rootNode) {
+    node = rootNode;
   }
   return node;
 };

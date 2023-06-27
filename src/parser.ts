@@ -6,7 +6,9 @@ import { CONTAINER_NODES } from "./constants.js";
 export const parser = (code: string) => {
     const lines = code.split(/\n/);
 
-    let node = new FTDRootNode();
+    const rootNode = new FTDRootNode();
+
+    let node = rootNode;
 
     const len = lines.length;
 
@@ -27,6 +29,11 @@ export const parser = (code: string) => {
 
                 if(shouldEndComponent(node, param)) {
                     node = node.parent;
+                } else {
+                    throw new Error(
+                        `FTD Parsing Error: ${node.component} is a container node and should be closed.\n\n` +
+                        `You are missing '-- end: ${node.component}'`
+                    );
                 }
             } else {
                 if(!node.isContainerNode && !node.isRootNode) {
@@ -65,6 +72,10 @@ export const parser = (code: string) => {
         }
 
         i++;
+    }
+
+    if(node !== rootNode) {
+        node = rootNode;
     }
 
     return node;
