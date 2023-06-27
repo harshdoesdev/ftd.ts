@@ -1,6 +1,6 @@
 {
   "name": "ftd.ts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Standalone FTD Parser written in TypeScript",
   "main": "dist/index.js",
   "files": [
@@ -16,7 +16,10 @@
     "type": "git",
     "url": "git+https://github.com/theharshsingh/ftd.ts.git"
   },
-  "keywords": ["ftd", "parser"],
+  "keywords": [
+    "ftd",
+    "parser"
+  ],
   "author": "Harsh Singh",
   "license": "BSD-3-Clause",
   "devDependencies": {
