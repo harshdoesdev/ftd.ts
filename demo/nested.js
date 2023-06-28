@@ -1,19 +1,25 @@
 import { ftd } from '../dist/index.js';
 
 const ast = ftd`
--- import: https://demo.com as demo
+-- import: stuff
 
--- ftd.text: Hello World
+;; This is a comment
+
+-- ftd.text: Hello World ;; This is an inline comment
+
+;; Nesting
 
 -- ftd.column:
 
     -- ftd.row:
 
-        -- ftd.container:
+        -- ftd.text:
+        color: red
 
-            --ftd.text: Hello Again
+        This is a 
+        mulitline string
 
-        -- end: ftd.container
+        -- ftd.text: Hello Again!
 
     -- end: ftd.row
 

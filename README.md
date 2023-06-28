@@ -6,7 +6,7 @@ Original Project: [Fastn Stack](https://fastn.com)
 
 ## 📜 Copyright
 
-⚠️ Legal Stuff: Fastn, Fastn Stack, and FTD are Copyrights of [FifthTry.com](https://fifthtry.com). Don't mess with the FifthTry folks, they've got the legal ninjas ready! 🥷💼
+⚠️ Legal Stuff: Fastn, Fastn Stack, and FTD are Copyrights of [FifthTry.com](https://fifthtry.com).
 
 ## 📚 Introduction
 
@@ -26,13 +26,40 @@ Just use the magical ftd template tag and let the parser work its charm! Here's 
 ```typescript
 import { ftd } from 'ftd.ts';
 
-const ast = ftd\`
--- ftd.text: Hello World
--- More FTD goodness here!
-\`;
+const ast = ftd`
+-- import: stuff
+
+;; This is a comment
+
+-- ftd.text: Hello World ;; This is an inline comment
+
+;; Nesting
+
+-- ftd.column:
+
+    -- ftd.row:
+
+        -- ftd.text:
+        color: red
+
+        This is a 
+        mulitline string
+
+        -- ftd.text: Hello Again!
+
+    -- end: ftd.row
+
+-- end: ftd.column
+`;
 
 console.log(ast); // Marvel at the magnificent Abstract Syntax Tree! 🌳🤩
 ```
+
+## 📝 TODO
+
+- [ ] Add Component, Record, and Variable Declaration support
+- [ ] Add Renderer function to convert FTD Tree into JavaScript DOM Nodes
+- [ ] Add Asset Loader for managing assets
 
 ## 📃 License
 
