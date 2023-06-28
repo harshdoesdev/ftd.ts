@@ -9,23 +9,29 @@ declare class FTDParam {
     value: string;
     constructor(key: string, value: string);
 }
+declare class FTDImportStmt {
+    resource: string;
+    alias: string | null;
+    constructor(resource: string, alias?: string | null);
+}
 declare class FTDNode {
-    component: string;
+    type: string;
     isRootNode: boolean;
     isContainerNode: boolean;
     hasChildNodes: boolean;
     params: FTDParamType[];
     children: FTDNodeType[];
     parent: FTDNode | null;
-    constructor(component: string, params: string, parent: FTDNode | null);
+    constructor(type: string, params: string, parent: FTDNode | null);
 }
 declare class FTDRootNode extends FTDNode {
+    importStatements: FTDImportStmt[];
     constructor();
 }
 declare class FTDContainerNode extends FTDNode {
-    constructor(component: string, params: string, parent: FTDNode);
+    constructor(type: string, params: string, parent: FTDNode);
 }
 
-declare const ftd: (strings: string[], ...values: string[]) => FTDRootNode;
+declare const ftd: (strings: string[], ...values: string[]) => FTDNode | FTDRootNode;
 
 export { ftd };

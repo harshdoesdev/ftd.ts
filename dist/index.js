@@ -16,29 +16,38 @@ class FTDParam {
     this.value = value;
   }
 }
+class FTDImportStmt {
+  resource;
+  alias;
+  constructor(resource, alias = null) {
+    this.resource = resource;
+    this.alias = alias;
+  }
+}
 class FTDNode {
-  component;
+  type;
   isRootNode = false;
   isContainerNode = false;
   hasChildNodes = false;
   params;
   children = [];
   parent;
-  constructor(component, params, parent) {
-    this.component = component;
+  constructor(type, params, parent) {
+    this.type = type;
     this.parent = parent;
     this.params = params ? [new FTDInlineParam(params)] : [];
   }
 }
 class FTDRootNode extends FTDNode {
+  importStatements = [];
   constructor() {
     super(ROOT_NODE, null, null);
     this.isRootNode = true;
   }
 }
 class FTDContainerNode extends FTDNode {
-  constructor(component, params, parent) {
-    super(component, params, parent);
+  constructor(type, params, parent) {
+    super(type, params, parent);
     this.isContainerNode = true;
   }
 }
@@ -57,18 +66,18 @@ const removeInlineComments = (v) => {
   }
   return output;
 };
-const extractComponentAndParams = (line) => {
+const extractTypeAndParams = (line) => {
   const trimmed = line.substring(2).trimStart();
   const index = trimmed.indexOf(":");
-  const component = trimmed.slice(0, index).trim();
+  const type = trimmed.slice(0, index).trim();
   const params = removeInlineComments(trimmed.slice(index + 1).trim());
-  return [component, params];
+  return [type, params];
 };
-const shouldEndComponent = (node, endingBlock) => {
+const shouldEndNode = (node, endingBlock) => {
   if (node.isRootNode) {
     return true;
   }
-  return node.component === endingBlock;
+  return node.type === endingBlock;
 };
 
 const parser = (code) => {
@@ -80,31 +89,45 @@ const parser = (code) => {
   while (i < len) {
     const line = lines[i].trimStart();
     if (line.startsWith(";;")) ; else if (line.startsWith("--")) {
-      const [component, param] = extractComponentAndParams(line);
-      if (component === "end") {
+      const [type, param] = extractTypeAndParams(line);
+      if (type === "import") {
+        const parts = param.split(/\s+/);
+        let aliasIndex = parts.indexOf("as");
+        if (aliasIndex === 0) {
+          throw new Error(
+            `FTD Parsing Error: Missing resource path in import statement.
+
+This error occured at Line: ${i}'`
+          );
+        }
+        const resource = parts[0];
+        const alias = aliasIndex > 0 ? parts[aliasIndex + 1] : null;
+        const stmt = new FTDImportStmt(resource, alias);
+        rootNode.importStatements.push(stmt);
+      } else if (type === "end") {
         if (!node.isContainerNode && !node.isRootNode) {
           node = node.parent;
         }
-        if (shouldEndComponent(node, param)) {
+        if (shouldEndNode(node, param)) {
           node = node.parent;
         } else {
           throw new Error(
-            `FTD Parsing Error: ${node.component} is a container node and should be closed.
+            `FTD Parsing Error: ${node.type} is a container node and should be closed.
 
-You are missing '-- end: ${node.component}'`
+You are missing '-- end: ${node.type}'`
           );
         }
       } else {
         if (!node.isContainerNode && !node.isRootNode) {
           node = node.parent;
         }
-        if (CONTAINER_NODES.includes(component)) {
-          const child = new FTDContainerNode(component, param, node);
+        if (CONTAINER_NODES.includes(type)) {
+          const child = new FTDContainerNode(type, param, node);
           node.children.push(child);
           node.hasChildNodes = true;
           node = child;
         } else {
-          const child = new FTDNode(component, param, node);
+          const child = new FTDNode(type, param, node);
           node.children.push(child);
           node = child;
         }

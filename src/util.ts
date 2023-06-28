@@ -1,5 +1,5 @@
 import { COMMENT_BEGIN } from "./constants";
-import { FTDNodeType, FTDRootNode } from './tree';
+import { FTDNodeType, FTDRootNode } from './types';
 
 export const removeInlineComments = (v: string) => {
     let index = v.indexOf(COMMENT_BEGIN);
@@ -20,22 +20,22 @@ export const removeInlineComments = (v: string) => {
     return output;
 };
 
-export const extractComponentAndParams = (line: string) => {
+export const extractTypeAndParams = (line: string) => {
     const trimmed = line.substring(2).trimStart();
     const index = trimmed.indexOf(':');
 
-    const component = trimmed.slice(0, index).trim();
+    const type = trimmed.slice(0, index).trim();
     const params = removeInlineComments(trimmed.slice(index + 1).trim());
 
-    return [component, params];
+    return [type, params];
 };
 
 export const isFTDComponent = (v: string) => v.split('.')[0] === 'ftd';
 
-export const shouldEndComponent = (node: FTDRootNode | FTDNodeType, endingBlock: string) => {
-    if((node as FTDRootNode).isRootNode) {
+export const shouldEndNode = (node: FTDRootNode | FTDNodeType, endingBlock: string) => {
+    if(node.isRootNode) {
         return true;
     }
 
-    return node.component === endingBlock;
+    return node.type === endingBlock;
 };

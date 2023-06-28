@@ -22,8 +22,18 @@ export class FTDParam {
     }
 }
 
+export class FTDImportStmt {
+    public resource: string
+    public alias: string|null
+
+    constructor(resource: string, alias: string|null = null) {
+        this.resource = resource;
+        this.alias = alias;
+    }
+}
+
 export class FTDNode {
-    public component: string
+    public type: string
     public isRootNode: boolean = false
     public isContainerNode: boolean = false
     public hasChildNodes: boolean = false
@@ -31,14 +41,16 @@ export class FTDNode {
     public children: FTDNodeType[] = []
     public parent: FTDNode|null
     
-    constructor(component: string, params: string, parent: FTDNode|null) {
-        this.component = component;
+    constructor(type: string, params: string, parent: FTDNode|null) {
+        this.type = type;
         this.parent = parent;
         this.params = params ? [new FTDInlineParam(params)] : [];
     }
 }
 
 export class FTDRootNode extends FTDNode {
+    importStatements: FTDImportStmt[] = []
+
     constructor() {
         super(ROOT_NODE, null, null);
         this.isRootNode = true;
@@ -46,8 +58,8 @@ export class FTDRootNode extends FTDNode {
 }
 
 export class FTDContainerNode extends FTDNode {
-    constructor(component: string, params: string, parent: FTDNode) {
-        super(component, params, parent);
+    constructor(type: string, params: string, parent: FTDNode) {
+        super(type, params, parent);
 
         this.isContainerNode = true;
     }
