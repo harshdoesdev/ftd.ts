@@ -40,11 +40,13 @@ export class FTDNode {
     public params: FTDParamType[]
     public children: FTDNodeType[] = []
     public parent: FTDNode|null
+    public identifier: string|null
     
-    constructor(type: string, params: string, parent: FTDNode|null) {
+    constructor(type: string, params: string, parent: FTDNode|null, identifier?: string|null) {
         this.type = type;
         this.parent = parent;
         this.params = params ? [new FTDInlineParam(params)] : [];
+        this.identifier = identifier;
     }
 }
 
@@ -58,9 +60,13 @@ export class FTDRootNode extends FTDNode {
 }
 
 export class FTDContainerNode extends FTDNode {
-    constructor(type: string, params: string, parent: FTDNode) {
-        super(type, params, parent);
+    constructor(type: string, params: string, parent: FTDNode, identifier: string|null) {
+        super(type, params, parent, identifier);
 
         this.isContainerNode = true;
     }
+}
+
+export interface FTDParserOptions {
+    containerTypes: string[]
 }

@@ -22,16 +22,22 @@ declare class FTDNode {
     params: FTDParamType[];
     children: FTDNodeType[];
     parent: FTDNode | null;
-    constructor(type: string, params: string, parent: FTDNode | null);
+    identifier: string | null;
+    constructor(type: string, params: string, parent: FTDNode | null, identifier?: string | null);
 }
 declare class FTDRootNode extends FTDNode {
     importStatements: FTDImportStmt[];
     constructor();
 }
 declare class FTDContainerNode extends FTDNode {
-    constructor(type: string, params: string, parent: FTDNode);
+    constructor(type: string, params: string, parent: FTDNode, identifier: string | null);
+}
+interface FTDParserOptions {
+    containerTypes: string[];
 }
 
-declare const ftd: (strings: string[], ...values: string[]) => FTDNode | FTDRootNode;
+declare const createFTDParser: (containerNodes: FTDParserOptions) => (strings: string[], ...values: string[]) => FTDNode | FTDRootNode;
 
-export { ftd };
+declare const parser: (code: string, { containerTypes }: FTDParserOptions) => FTDNode | FTDRootNode;
+
+export { createFTDParser, parser };

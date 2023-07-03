@@ -1,9 +1,9 @@
-import { FTDContainerNode, FTDImportStmt, FTDNode, FTDParam, FTDRootNode } from "./types";
+import { FTDContainerNode, FTDImportStmt, FTDNode, FTDParam, FTDParserOptions, FTDRootNode } from "./types";
 import { extractTypeAndParams, removeInlineComments, shouldEndNode } from "./util";
 
-import { CONTAINER_NODES } from "./constants.js";
+import { COMMAND_BEGIN, COMMENT_BEGIN, CONTAINER_NODES, KEYWORDS } from "./constants";
 
-export const parser = (code: string) => {
+export const parser = (code: string, { containerTypes = [] }: FTDParserOptions) => {
     const lines = code.split(/\n/);
 
     const rootNode = new FTDRootNode();
@@ -17,20 +17,19 @@ export const parser = (code: string) => {
     while(i < len) {
         const line = lines[i].trimStart();
 
-        if(line.startsWith(';;')) {
+        if(line.startsWith(COMMENT_BEGIN)) {
             // do nothing
-        } else if(line.startsWith('--')) {
-            const [type, param] = extractTypeAndParams(line);
+        } else if(line.startsWith(COMMAND_BEGIN)) {
+            const [type, identifier, param] = extractTypeAndParams(line);
 
-            if(type === 'import') {
+            if(type === KEYWORDS.IMPORT) {
                 const parts = param.split(/\s+/);
 
                 let aliasIndex = parts.indexOf('as');
 
                 if(aliasIndex === 0) {
                     throw new Error(
-                        `FTD Parsing Error: Missing resource path in import statement.\n\n` +
-                        `This error occured at Line: ${i}'`
+                        `FTD Parsing Error at Line ${i}: Missing resource path in import statement.`
                     );
                 }
 
@@ -41,7 +40,7 @@ export const parser = (code: string) => {
                 const stmt = new FTDImportStmt(resource, alias);
 
                 rootNode.importStatements.push(stmt);
-            } else if(type === 'end') {
+            } else if(type === KEYWORDS.END) {
                 if(!node.isContainerNode && !node.isRootNode) {
                     node = node.parent;
                 }
@@ -50,7 +49,7 @@ export const parser = (code: string) => {
                     node = node.parent;
                 } else {
                     throw new Error(
-                        `FTD Parsing Error: ${node.type} is a container node and should be closed.\n\n` +
+                        `FTD Parsing Error on Line ${i}: ${node.type} is a container node and should be closed.\n\n` +
                         `You are missing '-- end: ${node.type}'`
                     );
                 }
@@ -59,8 +58,8 @@ export const parser = (code: string) => {
                     node = node.parent;
                 }
 
-                if(CONTAINER_NODES.includes(type)) {
-                    const child = new FTDContainerNode(type, param, node);
+                if(CONTAINER_NODES.includes(type) || containerTypes.includes(type)) {
+                    const child = new FTDContainerNode(type, param, node, identifier);
 
                     node.children.push(child);
 

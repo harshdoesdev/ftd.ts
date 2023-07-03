@@ -1,6 +1,11 @@
-const ROOT_NODE = "#root";
-const CONTAINER_NODES = ["ftd.column", "ftd.row", "ftd.container", "ftd.component"];
+const COMMAND_BEGIN = "--";
 const COMMENT_BEGIN = ";;";
+const ROOT_NODE = "#root";
+const CONTAINER_NODES = ["component"];
+const KEYWORDS = {
+  IMPORT: "import",
+  END: "end"
+};
 
 class FTDInlineParam {
   value;
@@ -32,10 +37,12 @@ class FTDNode {
   params;
   children = [];
   parent;
-  constructor(type, params, parent) {
+  identifier;
+  constructor(type, params, parent, identifier) {
     this.type = type;
     this.parent = parent;
     this.params = params ? [new FTDInlineParam(params)] : [];
+    this.identifier = identifier;
   }
 }
 class FTDRootNode extends FTDNode {
@@ -46,8 +53,8 @@ class FTDRootNode extends FTDNode {
   }
 }
 class FTDContainerNode extends FTDNode {
-  constructor(type, params, parent) {
-    super(type, params, parent);
+  constructor(type, params, parent, identifier) {
+    super(type, params, parent, identifier);
     this.isContainerNode = true;
   }
 }
@@ -69,18 +76,21 @@ const removeInlineComments = (v) => {
 const extractTypeAndParams = (line) => {
   const trimmed = line.substring(2).trimStart();
   const index = trimmed.indexOf(":");
-  const type = trimmed.slice(0, index).trim();
+  const [type, identifier] = trimmed.slice(0, index).trim().split(/\s+/);
   const params = removeInlineComments(trimmed.slice(index + 1).trim());
-  return [type, params];
+  return [type, identifier, params];
 };
 const shouldEndNode = (node, endingBlock) => {
   if (node.isRootNode) {
     return true;
   }
+  if (node.identifier && node.identifier === endingBlock) {
+    return true;
+  }
   return node.type === endingBlock;
 };
 
-const parser = (code) => {
+const parser = (code, { containerTypes = [] }) => {
   const lines = code.split(/\n/);
   const rootNode = new FTDRootNode();
   let node = rootNode;
@@ -88,23 +98,21 @@ const parser = (code) => {
   let i = 0;
   while (i < len) {
     const line = lines[i].trimStart();
-    if (line.startsWith(";;")) ; else if (line.startsWith("--")) {
-      const [type, param] = extractTypeAndParams(line);
-      if (type === "import") {
+    if (line.startsWith(COMMENT_BEGIN)) ; else if (line.startsWith(COMMAND_BEGIN)) {
+      const [type, identifier, param] = extractTypeAndParams(line);
+      if (type === KEYWORDS.IMPORT) {
         const parts = param.split(/\s+/);
         let aliasIndex = parts.indexOf("as");
         if (aliasIndex === 0) {
           throw new Error(
-            `FTD Parsing Error: Missing resource path in import statement.
-
-This error occured at Line: ${i}'`
+            `FTD Parsing Error at Line ${i}: Missing resource path in import statement.`
           );
         }
         const resource = parts[0];
         const alias = aliasIndex > 0 ? parts[aliasIndex + 1] : null;
         const stmt = new FTDImportStmt(resource, alias);
         rootNode.importStatements.push(stmt);
-      } else if (type === "end") {
+      } else if (type === KEYWORDS.END) {
         if (!node.isContainerNode && !node.isRootNode) {
           node = node.parent;
         }
@@ -112,7 +120,7 @@ This error occured at Line: ${i}'`
           node = node.parent;
         } else {
           throw new Error(
-            `FTD Parsing Error: ${node.type} is a container node and should be closed.
+            `FTD Parsing Error on Line ${i}: ${node.type} is a container node and should be closed.
 
 You are missing '-- end: ${node.type}'`
           );
@@ -121,8 +129,8 @@ You are missing '-- end: ${node.type}'`
         if (!node.isContainerNode && !node.isRootNode) {
           node = node.parent;
         }
-        if (CONTAINER_NODES.includes(type)) {
-          const child = new FTDContainerNode(type, param, node);
+        if (CONTAINER_NODES.includes(type) || containerTypes.includes(type)) {
+          const child = new FTDContainerNode(type, param, node, identifier);
           node.children.push(child);
           node.hasChildNodes = true;
           node = child;
@@ -152,11 +160,11 @@ You are missing '-- end: ${node.type}'`
   return node;
 };
 
-const ftd = (strings, ...values) => {
+const createFTDParser = (containerNodes) => (strings, ...values) => {
   const code = values.reduce((output, value, index) => `${output}${value}${strings[index + 1]}`, strings[0]);
-  const tree = parser(code);
+  const tree = parser(code, containerNodes);
   return tree;
 };
 
-export { ftd };
+export { createFTDParser, parser };
 //# sourceMappingURL=index.js.map

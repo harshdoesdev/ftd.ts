@@ -24,16 +24,20 @@ export const extractTypeAndParams = (line: string) => {
     const trimmed = line.substring(2).trimStart();
     const index = trimmed.indexOf(':');
 
-    const type = trimmed.slice(0, index).trim();
+    const [type, identifier] = trimmed.slice(0, index).trim().split(/\s+/);
     const params = removeInlineComments(trimmed.slice(index + 1).trim());
 
-    return [type, params];
+    return [type, identifier, params];
 };
 
 export const isFTDComponent = (v: string) => v.split('.')[0] === 'ftd';
 
 export const shouldEndNode = (node: FTDRootNode | FTDNodeType, endingBlock: string) => {
     if(node.isRootNode) {
+        return true;
+    }
+
+    if(node.identifier && node.identifier === endingBlock) {
         return true;
     }
 
