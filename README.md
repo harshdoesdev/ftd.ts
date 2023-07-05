@@ -19,12 +19,22 @@ Welcome to the world of ftd.ts! This marvelous parser is here to help you unleas
 - Easy-peasy integration into your existing TypeScript projects. No mess, no fuss! 🧩
 - Lightning-fast parsing speed that will make you go "Wow!" ⚡️💨
 
+## ⚙️ Installation
+
+```bash
+npm i ftd.ts
+```
+
 ## 🌐 Usage
 
 Just use the magical ftd template tag and let the parser work its charm! Here's a sneak peek:
 
 ```typescript
-import { ftd } from 'ftd.ts';
+import { createFTDParser } from '../dist/index.js';
+
+const ftd = createFTDParser({
+    containerTypes: ['ftd.column', 'ftd.row'],
+});
 
 const ast = ftd`
 -- import: stuff
