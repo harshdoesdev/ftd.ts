@@ -4,7 +4,9 @@ export const COMMENT_BEGIN = ';;';
 
 export const ROOT_NODE = '#root';
 
-export const CONTAINER_NODES = ['component'];
+export const ESCAPE_CHAR = '\\';
+
+export const DEFINITION_KEYWORDS = ['component', 'record'];
 
 export const KEYWORDS = {
     IMPORT: 'import',

@@ -5,23 +5,9 @@ const ftd = createFTDParser({
 });
 
 const ast = ftd`
-;; This is a comment
 
--- component MyComponent:
+-- import: COMMENT
 
-    -- ftd.text: Hello World
-
--- end: MyComponent
-
--- ftd.column:
-
-    -- ftd.row:
-
-        -- MyComponent:
-
-    -- end: ftd.row
-
--- end: ftd.column
 `;
 
 console.log(ast);

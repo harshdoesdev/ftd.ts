@@ -1,7 +1,7 @@
 import { FTDContainerNode, FTDImportStmt, FTDNode, FTDParam, FTDParserOptions, FTDRootNode } from "./types";
-import { extractTypeAndParams, removeInlineComments, shouldEndNode } from "./util";
+import { extractTypeAndParams, isDefinitionType, isEscaped, removeInlineComments, shouldEndNode } from "./util";
 
-import { COMMAND_BEGIN, COMMENT_BEGIN, CONTAINER_NODES, KEYWORDS } from "./constants";
+import { COMMAND_BEGIN, COMMENT_BEGIN, ESCAPE_CHAR, KEYWORDS } from "./constants";
 
 export const parser = (code: string, { containerTypes = [] }: FTDParserOptions) => {
     const lines = code.split(/\n/);
@@ -58,7 +58,7 @@ export const parser = (code: string, { containerTypes = [] }: FTDParserOptions) 
                     node = node.parent;
                 }
 
-                if(CONTAINER_NODES.includes(type) || containerTypes.includes(type)) {
+                if(isDefinitionType(type, containerTypes)) {
                     const child = new FTDContainerNode(type, param, node, identifier);
 
                     node.children.push(child);
@@ -77,9 +77,28 @@ export const parser = (code: string, { containerTypes = [] }: FTDParserOptions) 
         } else if(!node.hasChildNodes && !node.isRootNode) {
             if(line) {
                 const index = line.indexOf(':');
+                
+                let j = 0;
+
+                let escaped = false;
+
+                let key = '';
+
+                while(j < index) {
+                    if(line[j] === ESCAPE_CHAR) {
+                        escaped = isEscaped(j, line, index);
+
+                        j++;
+                    }
+
+                    key += line[j];
+
+                    j++;
+                }
+
+                key = key.trim();
     
-                if(index > 0 && line[index - 1] !== '\\') {
-                    const key = line.slice(0, index).trim();
+                if(index > 0 && !escaped) {
                     const value = removeInlineComments(line.slice(index + 1).trim());
 
                     node.params.push(new FTDParam(key, value));

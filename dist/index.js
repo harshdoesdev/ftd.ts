@@ -1,7 +1,8 @@
 const COMMAND_BEGIN = "--";
 const COMMENT_BEGIN = ";;";
 const ROOT_NODE = "#root";
-const CONTAINER_NODES = ["component"];
+const ESCAPE_CHAR = "\\";
+const DEFINITION_KEYWORDS = ["component", "record"];
 const KEYWORDS = {
   IMPORT: "import",
   END: "end"
@@ -59,12 +60,30 @@ class FTDContainerNode extends FTDNode {
   }
 }
 
+const isEscaped = (index, chars, stop) => {
+  const stopIndex = stop ?? chars.length;
+  let count = 0;
+  while (index < stopIndex && chars[index] === ESCAPE_CHAR) {
+    count++;
+    index++;
+  }
+  if (count % 2 === 0) {
+    return false;
+  }
+  return true;
+};
 const removeInlineComments = (v) => {
   let index = v.indexOf(COMMENT_BEGIN);
+  let j = 0;
   let output = v;
   while (index > 0) {
-    const escaped = v[index - 1] === "\\";
+    let escaped = false;
+    while (j < index) {
+      escaped = isEscaped(j, v, index);
+      j++;
+    }
     if (escaped) {
+      j = index;
       index = v.indexOf(COMMENT_BEGIN, index + 1);
     } else {
       output = v.slice(0, index).trim();
@@ -79,6 +98,12 @@ const extractTypeAndParams = (line) => {
   const [type, identifier] = trimmed.slice(0, index).trim().split(/\s+/);
   const params = removeInlineComments(trimmed.slice(index + 1).trim());
   return [type, identifier, params];
+};
+const isDefinitionType = (type, containerTypes) => {
+  if (DEFINITION_KEYWORDS.includes(type) || containerTypes.includes(type)) {
+    return true;
+  }
+  return false;
 };
 const shouldEndNode = (node, endingBlock) => {
   if (node.isRootNode) {
@@ -129,7 +154,7 @@ You are missing '-- end: ${node.type}'`
         if (!node.isContainerNode && !node.isRootNode) {
           node = node.parent;
         }
-        if (CONTAINER_NODES.includes(type) || containerTypes.includes(type)) {
+        if (isDefinitionType(type, containerTypes)) {
           const child = new FTDContainerNode(type, param, node, identifier);
           node.children.push(child);
           node.hasChildNodes = true;
@@ -143,8 +168,19 @@ You are missing '-- end: ${node.type}'`
     } else if (!node.hasChildNodes && !node.isRootNode) {
       if (line) {
         const index = line.indexOf(":");
-        if (index > 0 && line[index - 1] !== "\\") {
-          const key = line.slice(0, index).trim();
+        let j = 0;
+        let escaped = false;
+        let key = "";
+        while (j < index) {
+          if (line[j] === ESCAPE_CHAR) {
+            escaped = isEscaped(j, line, index);
+            j++;
+          }
+          key += line[j];
+          j++;
+        }
+        key = key.trim();
+        if (index > 0 && !escaped) {
           const value = removeInlineComments(line.slice(index + 1).trim());
           node.params.push(new FTDParam(key, value));
         } else {
