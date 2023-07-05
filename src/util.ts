@@ -26,7 +26,7 @@ export const removeInlineComments = (v: string) => {
     
     let output = v;
 
-    while(index > 0) {
+    while(index >= 0) {
         let escaped = false;
 
         while(j < index) {

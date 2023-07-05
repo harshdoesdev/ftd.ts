@@ -76,7 +76,7 @@ const removeInlineComments = (v) => {
   let index = v.indexOf(COMMENT_BEGIN);
   let j = 0;
   let output = v;
-  while (index > 0) {
+  while (index >= 0) {
     let escaped = false;
     while (j < index) {
       escaped = isEscaped(j, v, index);
